@@ -92,6 +92,8 @@
   const replaceText = (el) => {
     if (el.nodeType === Node.TEXT_NODE) {
       if (regex.test(el.textContent)) {
+        createTooltip(el);
+
         el.textContent = el.textContent.replace(regex, (matched) => {
           const replacement = getReplacementText(matched);
           if (
@@ -104,7 +106,6 @@
           return replacement;
         });
 
-        createTooltip(el);
       }
     } else {
       for (let child of el.childNodes) {
@@ -117,11 +118,12 @@
   const anyChildOfBody = "/html/body//";
   // const doesNotContainAncestorWithRoleTextbox =
   //   "div[not(ancestor-or-self::*[@role=textbox])]/";
-  const isTextButNotPartOfJsScript = "text()[not(parent::script)]";
+  const isTextButNotPartOfJsScriptOrTooltip = "text()[not(parent::script) and not(ancestor::*[contains(@class, 'tooltip')])]";
   const xpathExpression =
     anyChildOfBody +
     //  + doesNotContainAncestorWithRoleTextbox;
-    isTextButNotPartOfJsScript;
+    isTextButNotPartOfJsScriptOrTooltip
+    
 
   const replaceTextInNodes = () => {
     if (regex == null || typeof regex === "undefined") {
@@ -216,7 +218,8 @@
   const createTooltip = (el) => {
     const newElement = document.createElement("div");
 
-    newElement.innerText = "Tooltip text";
+    newElement.innerText = el.textContent;
+    newElement.classList.add("tooltip");
     newElement.style.position = "absolute";
     newElement.style.backgroundColor = "black";
     newElement.style.color = "white";
@@ -228,7 +231,7 @@
 
     document.body.appendChild(newElement);
 
-    const parentNode =  el.parentNode;
+    const parentNode = el.parentNode;
 
     parentNode.addEventListener("mouseenter", function () {
       const rect = parentNode.getBoundingClientRect(); // Get the element's position
